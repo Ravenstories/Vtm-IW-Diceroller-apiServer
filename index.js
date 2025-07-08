@@ -7,6 +7,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
 function getClientWithPassword(password) {
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: {
