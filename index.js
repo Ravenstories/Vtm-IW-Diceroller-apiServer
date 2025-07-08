@@ -35,7 +35,7 @@ app.post("/save", async (req, res) => {
         "Prefer": "resolution=merge-duplicates", // This enables upsert
         "x-password": password
       },
-      body: JSON.stringify([{ name, data }])
+      body: JSON.stringify([{ name, data, password }])
     });
 
     const result = await response.json();
