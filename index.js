@@ -1,7 +1,7 @@
-import express from "express";
-import cors from "cors";
-import { createClient } from "@supabase/supabase-js";
-import 'dotenv/config';
+const express = require("express");
+const cors = require("cors");
+const { createClient } = require("@supabase/supabase-js");
+require("dotenv").config();
 
 const app = express();
 app.use(cors());
@@ -26,7 +26,6 @@ app.post("/save", async (req, res) => {
   if (!password) return res.status(400).json({ error: "Missing password" });
 
   const supabase = getClientWithPassword(password);
-
   const { error } = await supabase
     .from("game_states")
     .upsert([{ name, data, password }]);
@@ -39,14 +38,12 @@ app.post("/save", async (req, res) => {
   res.json({ success: true });
 });
 
-
 app.post("/load", async (req, res) => {
   const { name, password } = req.body;
 
   if (!password) return res.status(400).json({ error: "Missing password" });
 
   const supabase = getClientWithPassword(password);
-
   const { data, error } = await supabase
     .from("game_states")
     .select("data")
@@ -61,3 +58,6 @@ app.post("/load", async (req, res) => {
   res.json({ data: data.data });
 });
 
+app.listen(process.env.PORT || 3000, () =>
+  console.log("✅ Server running on port", process.env.PORT || 3000)
+);
