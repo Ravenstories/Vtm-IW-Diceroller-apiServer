@@ -22,13 +22,16 @@ function getClientWithPassword(password) {
 
 app.post("/save", async (req, res) => {
   const { name, data, password } = req.body;
-
   if (!password) return res.status(400).json({ error: "Missing password" });
 
-  const supabase = getClientWithPassword(password);
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
   const { error } = await supabase
     .from("game_states")
-    .upsert([{ name, data, password }]);
+    .upsert([{ name, data }], { onConflict: ['name'] })
+    .select()
+    .throwOnError()
+    .withHeaders({ "x-password": password }); // 💡 inject password here
 
   if (error) {
     console.error("Save error:", error);
