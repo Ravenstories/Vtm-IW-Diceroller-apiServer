@@ -3,6 +3,7 @@ const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -24,21 +25,31 @@ app.post("/save", async (req, res) => {
   const { name, data, password } = req.body;
   if (!password) return res.status(400).json({ error: "Missing password" });
 
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/game_states`, {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates", // This enables upsert
+        "x-password": password
+      },
+      body: JSON.stringify([{ name, data }])
+    });
 
-  const { error } = await supabase
-    .from("game_states")
-    .upsert([{ name, data }], { onConflict: ['name'] })
-    .select()
-    .throwOnError()
-    .withHeaders({ "x-password": password }); // 💡 inject password here
+    const result = await response.json();
 
-  if (error) {
-    console.error("Save error:", error);
-    return res.status(500).json({ error });
+    if (!response.ok) {
+      console.error("Save failed:", result);
+      return res.status(500).json({ error: result });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    res.status(500).json({ error: "Unexpected server error" });
   }
-
-  res.json({ success: true });
 });
 
 app.post("/load", async (req, res) => {
